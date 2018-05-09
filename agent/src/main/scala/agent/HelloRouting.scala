@@ -32,8 +32,12 @@ class HelloRouting(implicit system: ActorSystem, mat: ActorMaterializer) extends
   }
 
   def provider(interface: String, method: String, parameterTypesString: String, parameter: String): Route = {
-    onSuccess(rpcClient.invoke(interface, method, parameterTypesString, parameter)) { response =>
-      complete(response.bytes)
+    onComplete(rpcClient.invoke(interface, method, parameterTypesString, parameter)) {
+      case Success(response) =>
+        complete(response.bytes)
+      case Failure(e) =>
+        logger.warn(e.toString)
+        complete(StatusCodes.InternalServerError)
     }
   }
 

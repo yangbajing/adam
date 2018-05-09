@@ -18,7 +18,7 @@ class RpcClient(implicit system: ActorSystem) extends StrictLogging {
 
   private val remoteAddress = InetSocketAddress.createUnresolved("localhost", Configurations.dubboPort)
   private val client = system.actorOf(ClientActor.props(remoteAddress), "dubbo-client")
-  implicit private val timeout = Timeout(30.seconds)
+  implicit private val timeout = Timeout(60.seconds)
 
   def invoke(interface: String, method: String, parameterTypesString: String, parameter: String): Future[RpcResponse] = {
     val out = new ByteArrayOutputStream
