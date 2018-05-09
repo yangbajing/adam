@@ -18,7 +18,7 @@
         </encoder>
     </appender>
 
-    <logger name="agent" level="DEBUG"/>
+    <logger name="agent" level="INFO"/>
 
     <!-- 日志输出级别 -->
     <root level="INFO">

@@ -50,9 +50,9 @@ object DubboRpcCoder {
   private def encodeRequestData(inv: RpcInvocation): ByteArrayOutputStream = {
     val bos = new ByteArrayOutputStream
     val writer = new PrintWriter(new OutputStreamWriter(bos))
-    JsonUtils.writeObject(inv.attachments.getOrElse("dubbo", "2.6.0"), writer)
+    JsonUtils.writeObject(inv.attachments.getOrElse("dubbo", "2.0.1"), writer)
     JsonUtils.writeObject(inv.attachments.get("path").orNull, writer)
-    JsonUtils.writeObject(inv.attachments.get("version").orNull, writer)
+    JsonUtils.writeObject(inv.attachments.getOrElse("version", "0.0.0"), writer)
     JsonUtils.writeObject(inv.methodName, writer)
     JsonUtils.writeObject(inv.parameterTypes, writer)
     JsonUtils.writeBytes(inv.arguments, writer)

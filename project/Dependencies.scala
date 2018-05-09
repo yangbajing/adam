@@ -35,7 +35,7 @@ object Dependencies {
 
   lazy val _jetcdCore = "com.coreos" % "jetcd-core" % "0.0.2"
 
-  lazy val _fastjson = "com.alibaba" % "fastjson" % "1.2.47"
+  lazy val _fastjson = "com.alibaba" % "fastjson" % "1.2.46"
 
   lazy val _config = "com.typesafe" % "config" % "1.3.3"
 

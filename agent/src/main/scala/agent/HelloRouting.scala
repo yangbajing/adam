@@ -12,6 +12,8 @@ import akka.stream.ActorMaterializer
 import com.alibaba.fastjson.JSON
 import com.typesafe.scalalogging.StrictLogging
 
+import scala.util.{Failure, Success}
+
 class HelloRouting(implicit system: ActorSystem, mat: ActorMaterializer) extends StrictLogging {
 
   private val registry = new EtcdRegistry(System.getProperty("etcd.url"))
@@ -24,7 +26,7 @@ class HelloRouting(implicit system: ActorSystem, mat: ActorMaterializer) extends
       System.getProperty("type") match {
         case "consumer" => consumer(interfaceName, method, parameterTypesString, parameter)
         case "provider" => provider(interfaceName, method, parameterTypesString, parameter)
-        case _ => complete((StatusCodes.InternalServerError, "Environment variable type is needed to set to provider or consumer."))
+        case _          => complete((StatusCodes.InternalServerError, "Environment variable type is needed to set to provider or consumer."))
       }
     }
   }
@@ -39,7 +41,7 @@ class HelloRouting(implicit system: ActorSystem, mat: ActorMaterializer) extends
 
   def consumer(interface: String, method: String, parameterTypesString: String, parameter: String): Route = {
     import system.dispatcher
-    require(endpoints.nonEmpty, "无有效的服务")
+    //    require(endpoints.nonEmpty, "无有效的服务")
 
     // 简单的负载均衡，随机取一个
     robbinIdx += 1
@@ -48,19 +50,20 @@ class HelloRouting(implicit system: ActorSystem, mat: ActorMaterializer) extends
     val formData = FormData(("interface", interface), ("method", method), ("parameterTypesString", parameterTypesString), ("parameter", parameter))
 
     val req = HttpRequest(HttpMethods.POST, url, entity = formData.toEntity)
-    logger.info(s"Selected endpoint: $endpoint, $req")
+    logger.debug(s"Selected endpoint: $endpoint")
 
     val resp = Http()
       .singleRequest(req)
       .flatMap(response =>
         Unmarshal(response.entity)
           .to[Array[Byte]]
-          .map[Integer] { bytes =>
-            logger.debug(s"consumer received bytes: ${bytes.mkString(",")}, ${new String(bytes)}")
-            JSON.parseObject(bytes, classOf[Integer])
+          .map[Integer] { data =>
+            logger.debug(s"consumer received bytes: ${java.util.Arrays.toString(data)}, ${new String(data)}")
+            JSON.parseObject[Int](data, classOf[Integer])
           })
-    onSuccess(resp) { ival =>
-      complete(ival.toString)
+    onComplete(resp) {
+      case Success(ival) => complete(ival.toString)
+      case Failure(e)    => complete(StatusCodes.InternalServerError)
     }
   }
 
