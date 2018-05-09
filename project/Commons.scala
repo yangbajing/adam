@@ -2,8 +2,6 @@ import sbt.Keys._
 import sbt._
 import sbtassembly.AssemblyKeys.{assembly, assemblyMergeStrategy}
 import sbtassembly.{MergeStrategy, PathList}
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.headerLicense
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.HeaderLicense
 import Dependencies._
 
 object Commons {
@@ -14,10 +12,6 @@ object Commons {
     homepage := Some(url("https://tianchi.aliyun.com/programming/introduction.htm?raceId=231657/")),
     startYear := Some(2018),
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
-    headerLicense := Some(HeaderLicense.Custom(
-      """Copyright (c) Yangbajing 2018
-        |
-        |This is the custom License of Yangbajing""".stripMargin)),
     scalaVersion := Dependencies.versionScala,
     scalacOptions ++= Seq(
       "-encoding", "UTF-8", // yes, this is 2 args

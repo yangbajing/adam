@@ -120,3 +120,4 @@ project/plugins/project/
 .history
 .cache
 .lib/
+!/sbt-dist/bin/sbt-launch.jar

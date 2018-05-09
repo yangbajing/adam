@@ -1,11 +1,11 @@
 package agent.dubbo
 
-import java.io.{ ByteArrayOutputStream, OutputStreamWriter, PrintWriter }
+import java.io.{ByteArrayOutputStream, OutputStreamWriter, PrintWriter}
 import java.net.InetSocketAddress
 
 import agent.Configurations
 import agent.dubbo.actors.ClientActor
-import agent.dubbo.model.{ JsonUtils, Request, RpcInvocation, RpcResponse }
+import agent.dubbo.model.{JsonUtils, Request, RpcInvocation, RpcResponse}
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
@@ -24,10 +24,10 @@ class RpcClient(implicit system: ActorSystem) extends StrictLogging {
     val out = new ByteArrayOutputStream
     val writer = new PrintWriter(new OutputStreamWriter(out))
     JsonUtils.writeObject(parameter, writer)
-    val invocation = RpcInvocation(method, parameterTypesString, out.toByteArray, Map("path" -> interface))
 
-    val request = Request(invocation, version = "2.0.0")
-    logger.info(s"invoke: $request")
+    val invocation = RpcInvocation(method, parameterTypesString, out.toByteArray, Map("path" -> interface))
+    val request = Request(invocation)
+    logger.debug(s"invoke: $request")
 
     client.?(request).mapTo[RpcResponse]
   }
