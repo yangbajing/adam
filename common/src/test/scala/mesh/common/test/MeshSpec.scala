@@ -1,8 +1,8 @@
 package mesh.common.test
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Milliseconds, Seconds, Span }
-import org.scalatest.{ EitherValues, MustMatchers, OptionValues, WordSpecLike }
+import org.scalatest.time.{Milliseconds, Seconds, Span}
+import org.scalatest.{EitherValues, MustMatchers, OptionValues, WordSpecLike}
 
 trait MeshSpec extends WordSpecLike with MustMatchers with OptionValues with EitherValues with ScalaFutures {
 

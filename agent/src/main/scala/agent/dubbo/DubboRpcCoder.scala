@@ -19,7 +19,7 @@ object DubboRpcCoder {
 
   def decode(data: ByteString): RpcResponse = {
     val requestIdBytes = data.slice(4, 12)
-    val requestId = Utils.bytes2long(requestIdBytes, 0)
+    val requestId = ByteUtils.bytes2long(requestIdBytes, 0)
     val subBytes = data.drop(HEADER_LENGTH + 1)
     RpcResponse(requestId.toString, subBytes.toArray)
   }
@@ -28,7 +28,7 @@ object DubboRpcCoder {
     val header = Array.ofDim[Byte](HEADER_LENGTH)
 
     // set magic number.
-    Bytes.short2bytes(MAGIC, header)
+    ByteUtils.short2bytes(MAGIC, header)
 
     // set request and serialization flag.
     header(2) = (FLAG_REQUEST | 6).toByte
@@ -37,11 +37,11 @@ object DubboRpcCoder {
     if (req.event) header(2) = (header(2) | FLAG_EVENT).toByte
 
     // set request id.
-    Bytes.long2bytes(req.id, header, 4)
+    ByteUtils.long2bytes(req.id, header, 4)
 
     val bos = encodeRequestData(req.data)
 
-    Bytes.int2bytes(bos.size, header, 12)
+    ByteUtils.int2bytes(bos.size, header, 12)
 
     // write header     ++ encode request data
     ByteString(header) ++ ByteString(bos.toByteArray)

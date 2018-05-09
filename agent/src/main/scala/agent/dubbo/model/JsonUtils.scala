@@ -2,7 +2,7 @@ package agent.dubbo.model
 
 import java.io.PrintWriter
 
-import com.alibaba.fastjson.serializer.{ JSONSerializer, SerializeWriter, SerializerFeature }
+import com.alibaba.fastjson.serializer.{JSONSerializer, SerializeWriter, SerializerFeature}
 
 object JsonUtils {
 
