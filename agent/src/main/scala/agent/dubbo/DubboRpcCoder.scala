@@ -24,7 +24,7 @@ object DubboRpcCoder {
     RpcResponse(requestId.toString, subBytes.toArray)
   }
 
-  def encode(req: Request): ByteString = {
+  def encode(req: RpcRequest): ByteString = {
     val header = Array.ofDim[Byte](HEADER_LENGTH)
 
     // set magic number.
@@ -50,7 +50,7 @@ object DubboRpcCoder {
   private def encodeRequestData(inv: RpcInvocation): ByteArrayOutputStream = {
     val bos = new ByteArrayOutputStream
     val writer = new PrintWriter(new OutputStreamWriter(bos))
-    JsonUtils.writeObject(inv.attachments.getOrElse("dubbo", "2.0.1"), writer)
+    JsonUtils.writeObject(inv.attachments.getOrElse("dubbo", "2.6.0"), writer)
     JsonUtils.writeObject(inv.attachments.get("path").orNull, writer)
     JsonUtils.writeObject(inv.attachments.getOrElse("version", "0.0.0"), writer)
     JsonUtils.writeObject(inv.methodName, writer)

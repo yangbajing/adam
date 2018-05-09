@@ -23,6 +23,7 @@ elif [[ "$1" == "provider-small" ]]; then
        -Xmx512M \
        -Dtype=provider \
        -Dserver.port=30000\
+       -Dendpoint.port=30010\
        -Ddubbo.protocol.port=20889 \
        -Detcd.url=$ETCD_URL \
        -Dlogs.dir=/root/logs \
@@ -34,6 +35,7 @@ elif [[ "$1" == "provider-medium" ]]; then
        -Xmx1536M \
        -Dtype=provider \
        -Dserver.port=30001\
+       -Dendpoint.port=30011\
        -Ddubbo.protocol.port=20890 \
        -Detcd.url=$ETCD_URL \
        -Dlogs.dir=/root/logs \
@@ -45,6 +47,7 @@ elif [[ "$1" == "provider-large" ]]; then
        -Xmx2560M \
        -Dtype=provider \
        -Dserver.port=30002\
+       -Dendpoint.port=30012\
        -Ddubbo.protocol.port=20891 \
        -Detcd.url=$ETCD_URL \
        -Dlogs.dir=/root/logs \

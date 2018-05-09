@@ -1,29 +1,28 @@
 package agent.dubbo.actors
 
 import java.net.InetSocketAddress
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+import java.util.concurrent.ConcurrentHashMap
 
 import agent.dubbo.DubboRpcCoder
-import agent.dubbo.model.Request
+import agent.dubbo.model.RpcRequest
 import akka.actor.{Actor, ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.io.Tcp.{CommandFailed, ConnectionClosed, Received, Write}
 import akka.io.{IO, Tcp}
 import akka.routing.{ActorRefRoutee, RoundRobinRoutingLogic, Router}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.util.control.NonFatal
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
-object ClientActor {
+object DubboActor {
 
-  val NANO = 1000 * 1000L
-  val processingRpcs = new ConcurrentHashMap[String, (Request, Long, ActorRef)]()
+  val processingRpcs = new ConcurrentHashMap[String, (RpcRequest, Long, ActorRef)]()
 
   class WorkActor(conn: ActorRef, master: ActorRef) extends Actor with StrictLogging {
     import context.dispatcher
 
     override def receive: Receive = {
-      case request: Request =>
+      case request: RpcRequest =>
         val from = sender()
         processingRpcs.put(String.valueOf(request.id), (request, System.nanoTime(), from))
         val bytes = DubboRpcCoder.encode(request)
@@ -56,19 +55,19 @@ object ClientActor {
     }
   }
 
-  def props(remoteAddress: InetSocketAddress) = Props(new ClientActor(remoteAddress))
+  def props(remoteAddress: InetSocketAddress) = Props(new DubboActor(remoteAddress))
 
   def propsWork(connection: ActorRef, manager: ActorRef) = Props(new WorkActor(connection, manager))
 }
 
-class ClientActor(remoteAddress: InetSocketAddress) extends Actor with StrictLogging {
+class DubboActor(remoteAddress: InetSocketAddress) extends Actor with StrictLogging {
 
-  import ClientActor._
+  import DubboActor._
   import akka.io.Tcp._
   import context.system
 
   private var connection = Option.empty[ActorRef]
-  private var pendingRequests = List.empty[Request]
+  private var pendingRequests = List.empty[RpcRequest]
   private var router: Router = _
 
   private def createRouter(conn: ActorRef, routeeSize: Int = 4): Router = {
@@ -112,7 +111,7 @@ class ClientActor(remoteAddress: InetSocketAddress) extends Actor with StrictLog
       //      logger.debug(s"Dubbo RPC connected: $c，pendingRequests size: ${pendingRequests.size}")
       pendingRequests.reverse.foreach(request => router.route(Write(DubboRpcCoder.encode(request)), self))
 
-    case request: Request => // 连接建立前缓存收到的发送请求
+    case request: RpcRequest => // 连接建立前缓存收到的发送请求
       val from = sender()
       processingRpcs.put(String.valueOf(request.id), (request, System.nanoTime(), from))
       //      logger.debug(s"pending request: $request, processingRpc size: ${processingRpcs.size}")
@@ -120,7 +119,7 @@ class ClientActor(remoteAddress: InetSocketAddress) extends Actor with StrictLog
   }
 
   private def active(conn: ActorRef): Receive = {
-    case request: Request =>
+    case request: RpcRequest =>
       router.route(request, sender())
 
     case received: Received =>

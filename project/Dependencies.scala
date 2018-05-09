@@ -12,6 +12,7 @@ object Dependencies {
   lazy val _akkas = Seq(
     "com.typesafe.akka" %% "akka-slf4j" % versionAkka,
     "com.typesafe.akka" %% "akka-stream" % versionAkka,
+    "com.typesafe.akka" %% "akka-remote" % versionAkka,
     "com.typesafe.akka" %% "akka-testkit" % versionAkka % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % versionAkka % Test
   ).map(_.exclude("org.scala-lang.modules", s"scala-java8-compat").cross(CrossVersion.binary))

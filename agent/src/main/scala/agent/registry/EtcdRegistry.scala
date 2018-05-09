@@ -4,12 +4,12 @@ import java.net.InetAddress
 import java.text.MessageFormat
 import java.util.concurrent.Executors
 
-import agent.{ Configurations, Constants }
+import agent.{Configurations, Constants}
 import com.coreos.jetcd.data.ByteSequence
 import com.coreos.jetcd.kv.GetResponse
-import com.coreos.jetcd.options.{ GetOption, PutOption }
-import com.coreos.jetcd.{ Client, KV, Lease }
-import org.slf4j.{ Logger, LoggerFactory }
+import com.coreos.jetcd.options.{GetOption, PutOption}
+import com.coreos.jetcd.{Client, KV, Lease}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 
@@ -45,7 +45,7 @@ class EtcdRegistry(val registryAddress: String) extends IRegistry {
     keepAlive()
     if (Constants.PROVIDER == Configurations.runType) { // 如果是provider，去etcd注册服务
       try {
-        register(Constants.Service.HELLO_SERVICE, Configurations.serverPort)
+        register(Constants.Service.HELLO_SERVICE, Configurations.endpointPort)
       } catch {
         case e: Exception =>
           e.printStackTrace()
@@ -55,13 +55,11 @@ class EtcdRegistry(val registryAddress: String) extends IRegistry {
 
   // 向ETCD中注册服务
   override def register(serviceName: String, port: Int): Unit = { // 服务注册的key为:    /dubbomesh/com.some.package.IHelloService/192.168.100.100:2000
-    val strKey: String = MessageFormat.format(
-      "/{0}/{1}/{2}:{3}",
-      rootPath, serviceName, InetAddress.getLocalHost.getHostAddress, String.valueOf(port))
-    val key: ByteSequence = ByteSequence.fromString(strKey)
-    val value: ByteSequence = ByteSequence.fromString("") // 目前只需要创建这个key,对应的value暂不使用,先留空
+    val strKey = s"/$rootPath/$serviceName/${InetAddress.getLocalHost.getHostAddress}:$port"
+    val key = ByteSequence.fromString(strKey)
+    val value = ByteSequence.fromString("") // 目前只需要创建这个key,对应的value暂不使用,先留空
     kv.put(key, value, PutOption.newBuilder.withLeaseId(leaseId).build).get
-    logger.info("Register a new service at:" + strKey)
+    logger.info(s"Register a new mesh service at: $strKey")
   }
 
   // 发送心跳到ETCD,表明该host是活着的
