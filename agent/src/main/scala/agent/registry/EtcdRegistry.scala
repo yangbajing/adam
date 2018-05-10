@@ -33,7 +33,7 @@ class EtcdRegistry(val registryAddress: String) extends IRegistry {
   private var lease: Lease = _
   private var kv: KV = _
 
-  def init(): Unit = {
+  def init(): EtcdRegistry = {
     lease = client.getLeaseClient
     kv = client.getKVClient
     try {
@@ -48,9 +48,10 @@ class EtcdRegistry(val registryAddress: String) extends IRegistry {
         register(Constants.Service.HELLO_SERVICE, Configurations.endpointPort)
       } catch {
         case e: Exception =>
-          e.printStackTrace()
+          logger.error("Provider向Etcd注册失败", e)
       }
     }
+    this
   }
 
   // 向ETCD中注册服务

@@ -19,12 +19,13 @@ object DubboActor {
   val processingRpcs = new ConcurrentHashMap[String, (RpcRequest, Long, ActorRef)]()
 
   class WorkActor(conn: ActorRef, master: ActorRef) extends Actor with StrictLogging {
+
     import context.dispatcher
 
     override def receive: Receive = {
       case request: RpcRequest =>
         val from = sender()
-        processingRpcs.put(String.valueOf(request.id), (request, System.nanoTime(), from))
+        processingRpcs.put(String.valueOf(request.id), (request, 0, from))
         val bytes = DubboRpcCoder.encode(request)
         //        logger.debug(s"request: $request, processingRpc size: ${processingRpcs.size}\n$bytes")
         conn ! Write(bytes)
@@ -57,9 +58,13 @@ object DubboActor {
 
   def props(remoteAddress: InetSocketAddress) = Props(new DubboActor(remoteAddress))
 
-  def propsWork(connection: ActorRef, manager: ActorRef) = Props(new WorkActor(connection, manager))
+  private def propsWork(conn: ActorRef, manager: ActorRef) = Props(new WorkActor(conn, manager))
 }
 
+/**
+ * Dubbo actor由agent-provider使用
+ * @param remoteAddress
+ */
 class DubboActor(remoteAddress: InetSocketAddress) extends Actor with StrictLogging {
 
   import DubboActor._
@@ -69,15 +74,6 @@ class DubboActor(remoteAddress: InetSocketAddress) extends Actor with StrictLogg
   private var connection = Option.empty[ActorRef]
   private var pendingRequests = List.empty[RpcRequest]
   private var router: Router = _
-
-  private def createRouter(conn: ActorRef, routeeSize: Int = 4): Router = {
-    val routees = Vector.fill(routeeSize) {
-      val r = context.actorOf(propsWork(conn, self))
-      context watch r
-      ActorRefRoutee(r)
-    }
-    Router(RoundRobinRoutingLogic(), routees)
-  }
 
   override def preStart(): Unit = {
     IO(Tcp) ! Connect(remoteAddress, options = List(SO.KeepAlive(true), SO.TcpNoDelay(true)))
@@ -107,23 +103,32 @@ class DubboActor(remoteAddress: InetSocketAddress) extends Actor with StrictLogg
       conn ! Register(self)
       connection = Some(conn)
       router = createRouter(conn)
-      context.become(active(conn))
+      context.become(receiveActive(conn))
       //      logger.debug(s"Dubbo RPC connected: $c，pendingRequests size: ${pendingRequests.size}")
       pendingRequests.reverse.foreach(request => router.route(Write(DubboRpcCoder.encode(request)), self))
 
     case request: RpcRequest => // 连接建立前缓存收到的发送请求
       val from = sender()
-      processingRpcs.put(String.valueOf(request.id), (request, System.nanoTime(), from))
+      processingRpcs.put(String.valueOf(request.id), (request, 0, from))
       //      logger.debug(s"pending request: $request, processingRpc size: ${processingRpcs.size}")
       pendingRequests ::= request
   }
 
-  private def active(conn: ActorRef): Receive = {
+  private def receiveActive(conn: ActorRef): Receive = {
     case request: RpcRequest =>
       router.route(request, sender())
 
     case received: Received =>
       router.route(received, sender())
+  }
+
+  private def createRouter(conn: ActorRef, routeeSize: Int = 8): Router = {
+    val routees = Vector.fill(routeeSize) {
+      val r = context.actorOf(propsWork(conn, self))
+      context watch r
+      ActorRefRoutee(r)
+    }
+    Router(RoundRobinRoutingLogic(), routees)
   }
 
 }

@@ -3,7 +3,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/aliware2018/services AS builder
 
 COPY . /root/workspace/agent
 WORKDIR /root/workspace/agent
-RUN set -ex && ./sbt "project agent" assembly && agent/target/scala-2.12/agent-assembly-0.1.0-SNAPSHOT.jar /root/dists/mesh-agent.jar
+RUN set -ex && ./sbt "project agent" assembly && cp agent/target/scala-2.12/agent-assembly-0.1.0-SNAPSHOT.jar /root/dists/mesh-agent.jar
 
 
 # Runner container

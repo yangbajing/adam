@@ -1,31 +1,27 @@
 # 天池中间件大赛 2018
 
-## 运行
+## 运行并测试
 
-**consumer agent**
-
-```
--Detcd.url=http://localhost:2379 -Dtype=consumer -Dserver.port=20000
-```
-
-**provider agent**
+**启动Etcd**
 
 ```
--Xms512M -Xmx512M -Detcd.url=http://localhost:2379 -Dtype=provider -Dserver.port=30000 -Ddubbo.protocol.port=20889 -Dlogs.dir=logs/provider-small
-
--Xms1536M -Xmx1536M -Detcd.url=http://localhost:2379 -Dtype=provider -Dserver.port=30001 -Ddubbo.protocol.port=20890 -Dlogs.dir=logs/provider-medium
-
--Xms2560M -Xmx2560M -Detcd.url=http://localhost:2379 -Dtype=provider -Dserver.port=30002 -Ddubbo.protocol.port=20891 -Dlogs.dir=logs/provider-large
+ETCDCTL_API=3 ./etcd --listen-client-urls="http://0.0.0.0:2379,http://0.0.0.0:4001" --advertise-client-urls="http://0.0.0.0:2379,http://0.0.0.0:4001"
 ```
 
-## build docker for development
+**构建并运行测试**
 
 ```
-./build.sh
+./scripts/build.sh
+./scripts/docker-run.sh
+sleep 5
+./scripts/bench.sh
 ```
 
-## build docker for production
+**重新构建**
 
 ```
-docker build . -t mesh-agent-yangbajing
+./scripts/docker-stop.sh
+./scripts/docker-rm.sh
 ```
+
+删除Docker容器后再执行 **构建并运行测试**
